@@ -35,6 +35,6 @@ data class NationalWeatherTable(
     val y: Int
 )
 @Database(entities = [NationalWeatherTable::class], version = 1)
-abstract class AppDatabase: RoomDatabase() {
+abstract class NationalWeatherDatabase: RoomDatabase() {
     abstract fun nationalWeatherInterface(): NationalWeatherInterface
 }

@@ -66,16 +66,14 @@ class MainActivity : AppCompatActivity() {
         ).format(Calendar.getInstance().time) + "날씨"
 
 // nx, ny지점의 날씨 가져와서 설정하기
-//        setWeather(nx, ny)
-
+        requestLocation()
 // <새로고침> 버튼 누를 때 날씨 정보 다시 가져오기
         btnRefresh.setOnClickListener {
             requestLocation()
         }
 
-        val thread = Thread({
-            requestLocation()
-        }).start()
+
+
 //        val thread = Thread({
 //            var apiExamSearchBlog = ApiNews()
 //            apiExamSearchBlog.main()

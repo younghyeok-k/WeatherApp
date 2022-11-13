@@ -10,11 +10,14 @@ import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.room.Room
-import com.example.test2.Dao.AppDatabase
+
+import com.example.test2.Dao.NationalWeatherDatabase
+import com.example.test2.Dao.NationalWeatherTable
 import com.example.test2.Dao.SpaceTokenizer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.InputStream
 
 
 class LocationActivity : AppCompatActivity() {
@@ -43,6 +46,12 @@ class LocationActivity : AppCompatActivity() {
 //        val NationalWeatherDB = Room.databaseBuilder(applicationContext, AppDatabase::class.java,"db").build()
 //        //val input = NationalWeatherTable(1114062500,"seoul", "jongrogu", "dasandong", 60, 126)
 //
+
+
+        val NationalWeatherDB =
+            Room.databaseBuilder(applicationContext, NationalWeatherDatabase::class.java, "db")
+                .allowMainThreadQueries()
+                .build()
 //        val assetManager: AssetManager = resources.assets
 //        val inputStream: InputStream = assetManager.open("NationalWeatherDB.txt")
 //
@@ -54,15 +63,7 @@ class LocationActivity : AppCompatActivity() {
 //            }
 //            // Log.d("file_test", token.toString())
 //        }
-//
 
-        val NationalWeatherDB =
-            Room.databaseBuilder(applicationContext, AppDatabase::class.java, "db")
-                .allowMainThreadQueries()
-                .build()
-        //val input = NationalWeatherTable(1114062500,"seoul", "jongrogu", "dasandong", 60, 126)
-
-        val assetManager: AssetManager = resources.assets
 
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -79,7 +80,7 @@ class LocationActivity : AppCompatActivity() {
         word.addAll(name1)
         word.addAll(name2)
         word.addAll(name3)
-      Log.d("db_test", "$word")
+        Log.d("db_test", "$word")
 
 
 //        adapter =
@@ -115,6 +116,12 @@ class LocationActivity : AppCompatActivity() {
             curPoint = dfsXyConv(ax, ay)
             tx.text = curPoint!!.x.toString()
             ty.text = curPoint!!.y.toString()
+            val intent = Intent(this, testActivity::class.java)
+            intent.putExtra("nx", curPoint!!.x)
+            intent.putExtra("ny", curPoint!!.y)
+            intent.putExtra("address", mResultlist[0].locality)
+
+            startActivity(intent)
         }
 
     }
