@@ -1,28 +1,41 @@
 package com.example.test2
 
 import android.content.Intent
-import android.content.res.AssetManager
 import android.graphics.Point
 import android.location.Address
 import android.location.Geocoder
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import com.example.test2.Adapter.LocationAdpater
+import com.example.test2.Common.Common
+import com.example.test2.Dao.*
 
-import com.example.test2.Dao.NationalWeatherDatabase
-import com.example.test2.Dao.NationalWeatherTable
-import com.example.test2.Dao.SpaceTokenizer
+import com.example.test2.Model.ModelLocation
+import com.example.test2.network.ApiObject
+import com.example.test2.network.ITEM
+import com.example.test2.network.WEATHER
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.InputStream
+import retrofit2.Call
+import retrofit2.Response
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class LocationActivity : AppCompatActivity() {
     private var curPoint: Point? = null
-
+    private var base_time = "1200"
+    lateinit var locationRecyclerView: RecyclerView
+    private var base_date = "20221101"
+    lateinit var lowAdapter: LocationAdpater
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_location)
@@ -34,41 +47,29 @@ class LocationActivity : AppCompatActivity() {
         var ty = findViewById<TextView>(R.id.ty)
         var ax: Double
         var ay: Double
-        var adapter: ArrayAdapter<String>
+        locationRecyclerView = findViewById<RecyclerView>(R.id.locationrecyclerview)
 
-
+        locationRecyclerView.layoutManager = LinearLayoutManager(this@LocationActivity)
         val back = findViewById<Button>(R.id.btnback)
         back.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
         }
 
-//        val NationalWeatherDB = Room.databaseBuilder(applicationContext, AppDatabase::class.java,"db").build()
-//        //val input = NationalWeatherTable(1114062500,"seoul", "jongrogu", "dasandong", 60, 126)
-//
-
-
         val NationalWeatherDB =
             Room.databaseBuilder(applicationContext, NationalWeatherDatabase::class.java, "db")
                 .allowMainThreadQueries()
                 .build()
-//        val assetManager: AssetManager = resources.assets
-//        val inputStream: InputStream = assetManager.open("NationalWeatherDB.txt")
-//
-//        inputStream.bufferedReader().readLines().forEach {
-//            var token = it.split("\t")
-//            var input = NationalWeatherTable(token[0].toLong(), token[1], token[2], token[3], token[4].toInt(), token[5].toInt())
-//            CoroutineScope(Dispatchers.Main).launch {
-//                NationalWeatherDB.nationalWeatherInterface().insert(input)
-//            }
-//            // Log.d("file_test", token.toString())
-//        }
 
-
+        val WeatherLocationDB = Room.databaseBuilder(
+            applicationContext,
+            WeatherLocationDatabase::class.java,
+            "Weatherlocation"
+        )
+            .allowMainThreadQueries()
+            .build()
 
         CoroutineScope(Dispatchers.IO).launch {
-            //NationalWeatherDB.nationalWeatherInterface().deleteAll()
-            //NationalWeatherDB.nationalWeatherInterface().insert(input)
             var output = NationalWeatherDB.nationalWeatherInterface().getAll()
 
             Log.d("db_test", "$output")
@@ -82,17 +83,7 @@ class LocationActivity : AppCompatActivity() {
         word.addAll(name3)
         Log.d("db_test", "$word")
 
-
-//        adapter =
-//            ArrayAdapter(applicationContext, android.R.layout.simple_list_item_1, word)
-//        edadd.setAdapter(adapter)
-//        edadd.setTokenizer(SpaceTokenizer)
-
-        ArrayAdapter<String>(
-            this,
-            android.R.layout.simple_list_item_1,
-            word
-        ).also { adapter ->
+        ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, word).also { adapter ->
             edadd.setAdapter(adapter) // ArrayAdpater 는 검색어 목록을 보여주는데 사용
             edadd.setTokenizer(SpaceTokenizer()) // Tokenizer 는 단어들을 띄어쓰기로 구분
         }
@@ -123,6 +114,41 @@ class LocationActivity : AppCompatActivity() {
 
             startActivity(intent)
         }
+        var loarray: List<WeatherLocationTable>
+
+        loarray = WeatherLocationDB.WeatherLocationInterface().getAll()
+//            setWeather(WeatherLocationDB.WeatherLocationInterface().getAll())
+
+        val loArr = arrayOf(
+            ModelLocation(),
+            ModelLocation(),
+            ModelLocation(),
+            ModelLocation(),
+            ModelLocation()
+        )
+        for (i in 0..4) {
+            setWeather(i, loarray[i].addcity, loarray[i].wx, loarray[i].wy, loArr)
+            Log.d("setWether", loarray[i].id.toString())
+        }
+//
+        Log.d("wetherARR", loArr[0].address)
+        Log.d("wetherARR", loArr[1].address)
+        Log.d("wetherARR", loArr[2].address)
+        val adpter=LocationAdpater(loArr)
+        adpter.setOnItemClickListener(object : LocationAdpater.OnItemClickListener {
+            override fun onItemClick(v: View, pos: Int) {
+                WeatherLocationDB.WeatherLocationInterface().delete(loarray[pos])
+                locationRecyclerView.adapter?.notifyDataSetChanged()
+                adpter.notifyDataSetChanged()
+            }
+
+        })
+
+        locationRecyclerView.adapter = adpter
+
+
+
+
 
     }
 
@@ -162,4 +188,67 @@ class LocationActivity : AppCompatActivity() {
 
         return Point(x, y)
     }
+
+    // 날씨 가져와서 설정하기
+    private fun setWeather(
+        id: Int,
+        loaddress: String,
+        nx: Int,
+        ny: Int,
+        loarr: Array<ModelLocation>
+    ) {
+        val cal = Calendar.getInstance()
+        base_date = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(cal.time) // 현재 날짜
+        val timeH = SimpleDateFormat("HH", Locale.getDefault()).format(cal.time)
+        val timeM = SimpleDateFormat("MM", Locale.getDefault()).format(cal.time)
+        base_time = Common().getBaseTime(timeH, timeM)
+        if (timeH == "00" && base_time == "2330") {
+            cal.add(Calendar.DATE, -1).toString()
+            base_date = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(cal.time)
+        }
+        val call =
+            ApiObject.retrofitService.GetWeather(60, 1, "JSON", base_date, base_time, nx, ny)
+
+        call.enqueue(object : retrofit2.Callback<WEATHER> {
+            override fun onResponse(call: Call<WEATHER>, response: Response<WEATHER>) {
+                if (response.isSuccessful) {
+                    val it: List<ITEM> = response.body()!!.response.body.items.item
+                    val weatherArr = arrayOf(
+                        ModelLocation(),
+
+                        )
+                    var index = 0
+                    val totalCount = response.body()!!.response.body.totalCount - 1
+                    weatherArr[0].address = loaddress
+                    for (i in 0..totalCount) {
+                        index %= 1
+                        when (it[i].category) {
+                            "PTY" -> weatherArr[index].rainType = it[i].fcstValue // 강수 형태
+                            "REH" -> weatherArr[index].humidity = it[i].fcstValue // 습도
+                            "SKY" -> weatherArr[index].sky = it[i].fcstValue // 하늘 상태
+                            "T1H" -> weatherArr[index].temp = it[i].fcstValue // 기온
+                            else -> continue
+                        }
+                        index++
+                    }
+                    for (i in 0..0) weatherArr[i].fcstTime = it[i].fcstTime
+
+                    loarr.set(id, weatherArr[0])
+                    Log.d("setWether:rainType", weatherArr[0].rainType)
+                    Log.d("setWether", weatherArr[0].address)
+                    Log.d("loarr", loarr[id].address)
+                    Log.d("loarr", loarr[id].rainType)
+                    locationRecyclerView.adapter?.notifyDataSetChanged()
+                }
+            }
+
+            override fun onFailure(call: Call<WEATHER>, t: Throwable) {
+
+            }
+        }
+
+
+        )
+    }
+
 }

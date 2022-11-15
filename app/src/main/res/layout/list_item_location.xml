@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="150dp"
+    android:background="@drawable/layout_background"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="10dp"
+    android:layout_margin="10dp">
+
+    <TextView
+        android:id="@+id/loaddress"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="지역"
+        android:textSize="28sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+    <ImageView
+        android:id="@+id/imgWeather"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:src="@drawable/sun"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvTemp"
+        android:layout_width="100dp"
+        android:layout_height="35dp"
+        android:layout_marginLeft="20dp"
+        android:text="기온"
+        android:textColor="@color/white"
+        android:textSize="23sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/loaddress" />
+
+
+    <TextView
+        android:id="@+id/tvHumidity"
+        android:layout_width="100dp"
+        android:layout_height="35dp"
+        android:text="0%"
+        android:layout_marginLeft="10dp"
+        android:textSize="20sp"
+        android:textColor="@color/white"
+        app:layout_constraintStart_toEndOf="@+id/imageView2"
+        app:layout_constraintTop_toBottomOf="@+id/tvTemp" />
+
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginLeft="20dp"
+        android:src="@drawable/humidity"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvTemp" />
+
+    <Button
+        android:id="@+id/btndelete"
+        android:layout_width="80dp"
+        android:layout_height="40dp"
+        android:text="삭제"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

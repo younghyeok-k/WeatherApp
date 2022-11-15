@@ -19,8 +19,11 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.Room
 import com.example.test2.Adapter.WeatherAdapter
 import com.example.test2.Common.Common
+import com.example.test2.Dao.WeatherLocationDatabase
+import com.example.test2.Dao.WeatherLocationTable
 import com.example.test2.Model.ModelWeather
 import com.example.test2.NewApi.ApiNews
 import com.example.test2.network.ApiObject
@@ -44,7 +47,7 @@ class MainActivity : AppCompatActivity() {
     private var nx = "81" // 예보지점 X 좌표
     private var ny = "75" // 예보지점 Y 좌표
     private var curPoint: Point? = null
-
+    private lateinit var currentLocation: String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -73,15 +76,28 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-
 //        val thread = Thread({
 //            var apiExamSearchBlog = ApiNews()
 //            apiExamSearchBlog.main()
 //        }).start()
 
-        val btnmap=findViewById<Button>(R.id.btnmap)
-        btnmap.setOnClickListener{
+        val btnmap = findViewById<Button>(R.id.btnmap)
+        btnmap.setOnClickListener {
+
+//            val WeatherLocationDB =
+//                Room.databaseBuilder(
+//                    applicationContext,
+//                    WeatherLocationDatabase::class.java,
+//                    "Weatherlocation"
+//                )
+//                    .allowMainThreadQueries()
+//                    .build()
+//            WeatherLocationDB.WeatherLocationInterface()
+//                .insert(WeatherLocationTable(currentLocation,curPoint!!.x , curPoint!!.y))
             val intent = Intent(this, LocationActivity::class.java)
+//            intent.putExtra("mainx", curPoint!!.x)
+//            intent.putExtra("mainy", curPoint!!.y)
+//            intent.putExtra("mainaddress", currentLocation)
             startActivity(intent)
         }
 
@@ -165,7 +181,6 @@ class MainActivity : AppCompatActivity() {
                     tvTime.text = getTime(weatherArr[0].fcstTime)
                     tvHumidity.text = weatherArr[0].humidity + "%"
                     tvTemp.text = weatherArr[0].temp + "°"
-
 
 // 토스트 띄우기
                     Toast.makeText(
@@ -275,13 +290,13 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     private fun requestLocation() {
         val locationClient = LocationServices.getFusedLocationProviderClient(this@MainActivity)
-        var currentLocation:String
+
         try {
             // 나의 현재 위치 요청
             val locationRequest = LocationRequest.create()
             locationRequest.run {
                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-                interval = 60 * 1000    // 요청 간격(1초)
+                interval = 60 * 1000    // 요청 간격(10초)
             }
             val locationCallback = object : LocationCallback() {
                 // 요청 결과
@@ -293,14 +308,14 @@ class MainActivity : AppCompatActivity() {
                             Log.d("위치", (location.longitude).toString())
                             var geocoder = Geocoder(applicationContext)
                             var mResultlist: List<Address>
-                            val address =
+                            var address =
                                 geocoder.getFromLocation(location.latitude, location.longitude, 1)
 
-                                mResultlist = geocoder.getFromLocation(
-                                    location.latitude,
-                                    location.longitude,
-                                    1
-                                )
+                            mResultlist = geocoder.getFromLocation(
+                                location.latitude,
+                                location.longitude,
+                                1
+                            )
 
 
 

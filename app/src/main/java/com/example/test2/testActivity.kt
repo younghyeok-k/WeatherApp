@@ -21,6 +21,9 @@ import com.example.test2.Model.ModelWeather
 import com.example.test2.network.ApiObject
 import com.example.test2.network.ITEM
 import com.example.test2.network.WEATHER
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Response
 import java.text.SimpleDateFormat
@@ -38,6 +41,9 @@ class testActivity : AppCompatActivity() {
     private lateinit var address: String
     private lateinit var lotemp: String
     private lateinit var lohumidity: String
+    private lateinit var lorainType: String
+    private lateinit var losky: String
+    private lateinit var lofcstTime: String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_test)
@@ -57,7 +63,11 @@ class testActivity : AppCompatActivity() {
 
 
         val WeatherLocationDB =
-            Room.databaseBuilder(applicationContext, WeatherLocationDatabase::class.java, "Weatherlocation")
+            Room.databaseBuilder(
+                applicationContext,
+                WeatherLocationDatabase::class.java,
+                "Weatherlocation"
+            )
                 .allowMainThreadQueries()
                 .build()
 
@@ -79,12 +89,16 @@ class testActivity : AppCompatActivity() {
 
         val btnc = findViewById<Button>(R.id.btncancel)
         btnc.setOnClickListener {
+            WeatherLocationDB.WeatherLocationInterface().deleteAll()
             onBackPressed()
         }
         val btnok = findViewById<Button>(R.id.btnok)
         btnok.setOnClickListener {
             //주소 온도 습도
-            WeatherLocationDB.WeatherLocationInterface().insert(WeatherLocationTable( address,lotemp,lohumidity))
+
+            WeatherLocationDB.WeatherLocationInterface()
+                .insert(WeatherLocationTable(address, nx, ny))
+
             var output = WeatherLocationDB.WeatherLocationInterface().getAll()
 
             Log.d("wb_db", "$output")
@@ -162,17 +176,20 @@ class testActivity : AppCompatActivity() {
                     val tvTemp = findViewById<TextView>(R.id.tvTemp)
                     val tvHumidity = findViewById<TextView>(R.id.tvHumidity)
                     tvTime.text = base_time
+                    lorainType = weatherArr[0].rainType
+                    losky = weatherArr[0].sky
+                    lofcstTime = weatherArr[0].fcstTime
                     imgWeather.setImageResource(
                         getRainImage(
-                            weatherArr[0].rainType,
-                            weatherArr[0].sky,
-                            weatherArr[0].fcstTime
+                            lorainType,
+                            losky,
+                            lofcstTime
                         )
                     )
 
-                    lohumidity =weatherArr[0].humidity + "%"
-                    lotemp=weatherArr[0].temp + "°"
-                    tvTime.text = getTime(weatherArr[0].fcstTime)
+                    lohumidity = weatherArr[0].humidity + "%"
+                    lotemp = weatherArr[0].temp + "°"
+                    tvTime.text = getTime(lofcstTime)
                     tvHumidity.text = lohumidity
                     tvTemp.text = lotemp
 
