@@ -296,7 +296,7 @@ class MainActivity : AppCompatActivity() {
             val locationRequest = LocationRequest.create()
             locationRequest.run {
                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-                interval = 60 * 1000    // 요청 간격(10초)
+                interval = 60 * 1000    // 요청 간격(30초)
             }
             val locationCallback = object : LocationCallback() {
                 // 요청 결과

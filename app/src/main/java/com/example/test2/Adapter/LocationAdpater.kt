@@ -15,7 +15,7 @@ import com.example.test2.Dao.WeatherLocationDatabase
 import com.example.test2.Model.ModelLocation
 
 
-class LocationAdpater(var items: Array<ModelLocation>) :
+class LocationAdpater(var items: MutableList<ModelLocation>) :
     RecyclerView.Adapter<LocationAdpater.ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LocationAdpater.ViewHolder {
         val itemView =

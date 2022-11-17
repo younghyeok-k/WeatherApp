@@ -43,8 +43,6 @@ class LocationActivity : AppCompatActivity() {
         var mResultlist: List<Address>
         val edadd = findViewById<MultiAutoCompleteTextView>(R.id.edadd)
         val btncheck = findViewById<Button>(R.id.btncheck)
-        var tx = findViewById<TextView>(R.id.tx)
-        var ty = findViewById<TextView>(R.id.ty)
         var ax: Double
         var ay: Double
         locationRecyclerView = findViewById<RecyclerView>(R.id.locationrecyclerview)
@@ -99,14 +97,11 @@ class LocationActivity : AppCompatActivity() {
                     toastText += "Item $index : $item \n"
                 }
             }
-
-
             mResultlist = geocoder.getFromLocationName(edadd.text.toString(), 3)
             ax = mResultlist[0].latitude
             ay = mResultlist[0].longitude
             curPoint = dfsXyConv(ax, ay)
-            tx.text = curPoint!!.x.toString()
-            ty.text = curPoint!!.y.toString()
+
             val intent = Intent(this, testActivity::class.java)
             intent.putExtra("nx", curPoint!!.x)
             intent.putExtra("ny", curPoint!!.y)
@@ -118,36 +113,37 @@ class LocationActivity : AppCompatActivity() {
 
         loarray = WeatherLocationDB.WeatherLocationInterface().getAll()
 //            setWeather(WeatherLocationDB.WeatherLocationInterface().getAll())
+        Log.d("개수", loarray.size.toString())
+        val loArr = mutableListOf(
+            ModelLocation(),
+            ModelLocation(),
+            ModelLocation(),
+            ModelLocation(),
+            ModelLocation(),
 
-        val loArr = arrayOf(
-            ModelLocation(),
-            ModelLocation(),
-            ModelLocation(),
-            ModelLocation(),
-            ModelLocation()
-        )
+            )  //개수 지정해서 해야함
+//       var loArr: MutableList< ModelLocation> = mutableListOf()
         for (i in 0..4) {
             setWeather(i, loarray[i].addcity, loarray[i].wx, loarray[i].wy, loArr)
             Log.d("setWether", loarray[i].id.toString())
         }
-//
+
         Log.d("wetherARR", loArr[0].address)
         Log.d("wetherARR", loArr[1].address)
         Log.d("wetherARR", loArr[2].address)
-        val adpter=LocationAdpater(loArr)
+        val adpter = LocationAdpater(loArr)
         adpter.setOnItemClickListener(object : LocationAdpater.OnItemClickListener {
             override fun onItemClick(v: View, pos: Int) {
                 WeatherLocationDB.WeatherLocationInterface().delete(loarray[pos])
+                loArr.removeAt(pos)
                 locationRecyclerView.adapter?.notifyDataSetChanged()
                 adpter.notifyDataSetChanged()
             }
 
         })
 
+        adpter.notifyDataSetChanged()
         locationRecyclerView.adapter = adpter
-
-
-
 
 
     }
@@ -195,7 +191,7 @@ class LocationActivity : AppCompatActivity() {
         loaddress: String,
         nx: Int,
         ny: Int,
-        loarr: Array<ModelLocation>
+        loarr: MutableList<ModelLocation>
     ) {
         val cal = Calendar.getInstance()
         base_date = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(cal.time) // 현재 날짜
@@ -213,31 +209,38 @@ class LocationActivity : AppCompatActivity() {
             override fun onResponse(call: Call<WEATHER>, response: Response<WEATHER>) {
                 if (response.isSuccessful) {
                     val it: List<ITEM> = response.body()!!.response.body.items.item
-                    val weatherArr = arrayOf(
+                    val weatherArr = mutableListOf(
                         ModelLocation(),
-
+                        ModelLocation(),
+                        ModelLocation(),
+                        ModelLocation(),
+                        ModelLocation(),
+                        ModelLocation(),
                         )
                     var index = 0
                     val totalCount = response.body()!!.response.body.totalCount - 1
                     weatherArr[0].address = loaddress
                     for (i in 0..totalCount) {
-                        index %= 1
+                        index %= 6
                         when (it[i].category) {
                             "PTY" -> weatherArr[index].rainType = it[i].fcstValue // 강수 형태
                             "REH" -> weatherArr[index].humidity = it[i].fcstValue // 습도
                             "SKY" -> weatherArr[index].sky = it[i].fcstValue // 하늘 상태
                             "T1H" -> weatherArr[index].temp = it[i].fcstValue // 기온
+
                             else -> continue
                         }
                         index++
+//                        Log.d("loarr${i}",  weatherArr[index].temp)
                     }
-                    for (i in 0..0) weatherArr[i].fcstTime = it[i].fcstTime
+                    for (i in 0..5) weatherArr[i].fcstTime = it[i].fcstTime
 
                     loarr.set(id, weatherArr[0])
-                    Log.d("setWether:rainType", weatherArr[0].rainType)
-                    Log.d("setWether", weatherArr[0].address)
+                    Log.d("setWether:rainType237", weatherArr[0].rainType)
+                    Log.d("setWethe238r", weatherArr[0].address)
                     Log.d("loarr", loarr[id].address)
                     Log.d("loarr", loarr[id].rainType)
+
                     locationRecyclerView.adapter?.notifyDataSetChanged()
                 }
             }
