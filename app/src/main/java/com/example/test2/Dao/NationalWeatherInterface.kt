@@ -24,6 +24,8 @@ interface NationalWeatherInterface {
     @Query("DELETE FROM NationalWeatherTable")
     fun deleteAll()
 
+
+
 }
 @Entity
 data class NationalWeatherTable(

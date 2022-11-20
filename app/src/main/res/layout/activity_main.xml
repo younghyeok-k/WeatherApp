@@ -80,8 +80,6 @@
                 app:layout_constraintTop_toBottomOf="@+id/tvTime" />
 
 
-
-
             <ImageView
                 android:id="@+id/imageView"
                 android:layout_width="50dp"
@@ -104,12 +102,13 @@
                 android:textSize="30dp"
 
                 app:layout_constraintBottom_toBottomOf="parent" />
+
             <TextView
                 android:id="@+id/tvHumidity"
                 android:layout_width="80dp"
                 android:layout_height="50dp"
-                android:text="0%"
                 android:layout_marginLeft="20dp"
+                android:text="0%"
                 android:textColor="@color/white"
                 android:textSize="30sp"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -117,17 +116,17 @@
                 app:layout_constraintTop_toBottomOf="@+id/tvTemp" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-<!--        <TextView-->
-<!--            android:id="@+id/tvError"-->
-<!--            android:layout_width="57dp"-->
-<!--            android:layout_height="71dp"-->
-<!--            android:layout_margin="10dp"-->
-<!--            android:gravity="center"-->
-<!--            android:text="에러 : "-->
-<!--            android:textColor="@color/black"-->
-<!--            android:textSize="30dp"-->
-<!--            android:visibility="gone"-->
-<!--            />-->
+        <!--        <TextView-->
+        <!--            android:id="@+id/tvError"-->
+        <!--            android:layout_width="57dp"-->
+        <!--            android:layout_height="71dp"-->
+        <!--            android:layout_margin="10dp"-->
+        <!--            android:gravity="center"-->
+        <!--            android:text="에러 : "-->
+        <!--            android:textColor="@color/black"-->
+        <!--            android:textSize="30dp"-->
+        <!--            android:visibility="gone"-->
+        <!--            />-->
 
 
         <androidx.recyclerview.widget.RecyclerView
@@ -163,6 +162,14 @@
 
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/newsRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintTop_toBottomOf="@+id/btnRefresh" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

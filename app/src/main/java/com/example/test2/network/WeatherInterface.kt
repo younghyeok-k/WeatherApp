@@ -23,6 +23,8 @@ interface WeatherInterface {
                    @Query("ny") ny: Int
     )                // 예보지점 Y 좌표
             : Call<WEATHER>
+
+
 }
 
 
@@ -50,3 +52,4 @@ object ApiObject {
         retrofit.create(WeatherInterface::class.java)
     }
 }
+

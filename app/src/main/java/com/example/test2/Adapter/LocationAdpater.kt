@@ -4,19 +4,19 @@ package com.example.test2.Adapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.test2.R
 import android.annotation.SuppressLint
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.room.Room
-import com.example.test2.Dao.WeatherLocationDatabase
+import android.widget.Toast
 import com.example.test2.Model.ModelLocation
+import com.example.test2.Touch.ItemTouchHelperListener
 
 
-class LocationAdpater(var items: MutableList<ModelLocation>) :
-    RecyclerView.Adapter<LocationAdpater.ViewHolder>() {
+class LocationAdpater(private val context: Context, var items: MutableList<ModelLocation>) :
+    RecyclerView.Adapter<LocationAdpater.ViewHolder>(), ItemTouchHelperListener {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LocationAdpater.ViewHolder {
         val itemView =
             LayoutInflater.from(parent.context).inflate(R.layout.list_item_location, parent, false)
@@ -45,7 +45,6 @@ class LocationAdpater(var items: MutableList<ModelLocation>) :
             val imgWeather = itemView.findViewById<ImageView>(R.id.imgWeather)  // 날씨 이미지
             val tvHumidity = itemView.findViewById<TextView>(R.id.tvHumidity)   // 습도
             val tvTemp = itemView.findViewById<TextView>(R.id.tvTemp)           // 온도
-            val btndelete=itemView.findViewById<Button>(R.id.btndelete)
             imgWeather.setImageResource(getRainImage(item.rainType, item.sky, item.fcstTime))
             loaddress.text = item.address
             tvHumidity.text = item.humidity + "%"
@@ -58,6 +57,7 @@ class LocationAdpater(var items: MutableList<ModelLocation>) :
                     listener?.onItemClick(itemView,pos)
                 }
             }
+
         }
     }
 
@@ -89,5 +89,19 @@ class LocationAdpater(var items: MutableList<ModelLocation>) :
         else return R.drawable.after
 
     }
+
+
+    override fun onItemSwipe(position: Int) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onRightClick(position: Int, viewHolder: RecyclerView.ViewHolder?) {
+        Toast.makeText(context, "RightClick", Toast.LENGTH_SHORT).show()
+    }
+
+
+
+
+    override fun onItemMove(from_position: Int, to_position: Int): Boolean = false
 
 }

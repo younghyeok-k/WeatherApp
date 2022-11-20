@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
@@ -17,6 +18,7 @@ import com.example.test2.Common.Common
 import com.example.test2.Dao.*
 
 import com.example.test2.Model.ModelLocation
+import com.example.test2.Touch.SwipeController
 import com.example.test2.network.ApiObject
 import com.example.test2.network.ITEM
 import com.example.test2.network.WEATHER
@@ -131,7 +133,8 @@ class LocationActivity : AppCompatActivity() {
         Log.d("wetherARR", loArr[0].address)
         Log.d("wetherARR", loArr[1].address)
         Log.d("wetherARR", loArr[2].address)
-        val adpter = LocationAdpater(loArr)
+        val adpter = LocationAdpater(this,loArr)
+        val itemTouchHelper = ItemTouchHelper(SwipeController(adpter))
         adpter.setOnItemClickListener(object : LocationAdpater.OnItemClickListener {
             override fun onItemClick(v: View, pos: Int) {
                 WeatherLocationDB.WeatherLocationInterface().delete(loarray[pos])
@@ -142,6 +145,7 @@ class LocationActivity : AppCompatActivity() {
 
         })
 
+        itemTouchHelper.attachToRecyclerView(locationRecyclerView)
         adpter.notifyDataSetChanged()
         locationRecyclerView.adapter = adpter
 

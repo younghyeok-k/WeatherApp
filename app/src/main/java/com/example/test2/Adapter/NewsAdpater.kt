@@ -14,7 +14,7 @@ import android.widget.TextView
 import com.example.test2.Model.ModelNews
 
 
-class NewsAdpater (var items : Array<ModelNews>) : RecyclerView.Adapter<NewsAdpater.ViewHolder>() {
+class NewsAdpater (var items : List<ModelNews>) : RecyclerView.Adapter<NewsAdpater.ViewHolder>() {
     // 뷰 홀더 만들어서 반환, 뷰릐 레이아웃은 list_item_weather.xml
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NewsAdpater.ViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(R.layout.news_itme, parent, false)
@@ -34,12 +34,12 @@ class NewsAdpater (var items : Array<ModelNews>) : RecyclerView.Adapter<NewsAdpa
     inner class ViewHolder(itemView : View) : RecyclerView.ViewHolder(itemView) {
         @SuppressLint("SetTextI18n")
         fun setItem(item : ModelNews) {
-            val newsImage = itemView.findViewById<ImageView>(R.id.imgWeather)  // 뉴스 이미지
+            val link = itemView.findViewById<TextView>(R.id.link)  // 뉴스 이미지
             val title = itemView.findViewById<TextView>(R.id.title)           // 제목
             val pubDate = itemView.findViewById<TextView>(R.id.pubDate)   // 시간
 
 
-
+            link.text=item.link
             title.text=item.title
             pubDate.text=item.pubDate
 

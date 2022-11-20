@@ -2,6 +2,7 @@
 
 
 <androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/swipe_view"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -61,11 +62,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvTemp" />
 
-    <Button
-        android:id="@+id/btndelete"
-        android:layout_width="80dp"
-        android:layout_height="40dp"
-        android:text="삭제"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

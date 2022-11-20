@@ -20,28 +20,35 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import com.example.test2.Adapter.LocationAdpater
+import com.example.test2.Adapter.NewsAdpater
 import com.example.test2.Adapter.WeatherAdapter
 import com.example.test2.Common.Common
 import com.example.test2.Dao.WeatherLocationDatabase
 import com.example.test2.Dao.WeatherLocationTable
+import com.example.test2.Model.ModelNews
 import com.example.test2.Model.ModelWeather
 import com.example.test2.NewApi.ApiNews
-import com.example.test2.network.ApiObject
-import com.example.test2.network.ITEM
-import com.example.test2.network.WEATHER
+import com.example.test2.network.*
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import org.json.JSONException
+import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Response
+import retrofit2.create
 import java.text.SimpleDateFormat
 import java.util.*
+
 
 // 메인 액티비티
 class MainActivity : AppCompatActivity() {
     lateinit var weatherRecyclerView: RecyclerView
-
+    lateinit var newsRecyclerView: RecyclerView
+    private val clientId = "N0PQoQDH_BW4MgVBisw1"
+    private val clientSecret = "IbesixkkrN"
     private var base_date = "20221101" // 발표 일자
     private var base_time = "1200" // 발표 시각
     private var nx = "81" // 예보지점 X 좌표
@@ -55,6 +62,7 @@ class MainActivity : AppCompatActivity() {
         val tvDate =
             findViewById<TextView>(R.id.tvDate) // 오늘 날짜 텍스트뷰
         weatherRecyclerView = findViewById<RecyclerView>(R.id.weatherRecyclerView) // 날씨 리사이클러 뷰
+        newsRecyclerView = findViewById(R.id.newsRecyclerView)
         val btnRefresh = findViewById<Button>(R.id.btnRefresh) // 새로고침 버튼
 
 
@@ -62,6 +70,7 @@ class MainActivity : AppCompatActivity() {
         weatherRecyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
         weatherRecyclerView.layoutManager =
             LinearLayoutManager(this).also { it.orientation = LinearLayoutManager.HORIZONTAL }
+        newsRecyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
 // 오늘 날짜 텍스트뷰 설정
         tvDate.text = SimpleDateFormat(
             "MM월 dd일",
@@ -100,7 +109,7 @@ class MainActivity : AppCompatActivity() {
 //            intent.putExtra("mainaddress", currentLocation)
             startActivity(intent)
         }
-
+        getResultSearch()
 
     }
 
@@ -316,9 +325,6 @@ class MainActivity : AppCompatActivity() {
                                 location.longitude,
                                 1
                             )
-
-
-
                             currentLocation = mResultlist[0].locality
 
                             val txad = findViewById<TextView>(R.id.address);
@@ -383,6 +389,68 @@ class MainActivity : AppCompatActivity() {
         val y = (ro - ra * Math.cos(theta) + YO + 0.5).toInt()
 
         return Point(x, y)
+    }
+
+    fun getResultSearch() {
+        val apiInterface: ApiInterface = ApiClient.instance!!.create(ApiInterface::class.java)
+        val call = apiInterface.getSearchResult(clientId, clientSecret, "news", "오늘날씨")
+
+        call!!.enqueue(object : retrofit2.Callback<String?> {
+            override fun onResponse(call: Call<String?>, response: Response<String?>) {
+                if (response.isSuccessful && response.body() != null) {
+                    Log.d("naver:api", response.body().toString())
+                    var title: String
+                    var link: String
+                    var pubDate: String
+                    var jsonObject: JSONObject? = null
+
+                    val newlist = mutableListOf(
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                    )
+
+                    try {
+                        jsonObject = JSONObject(response.body())
+                        val jsonArray = jsonObject.getJSONArray("items")
+
+                        for (i in 0 until jsonArray.length()) {
+                            val item = jsonArray.getJSONObject(i)
+                            link = item.getString("link")
+                            title = item.getString("title").replace("&quot;", " \"\" ")
+                                .replace("&apos;", "").replace("<b>", "").replace("</b>", "")
+
+                            pubDate = item.getString("pubDate")
+                            println("TITLE : $title")
+
+                            println("link: $link")
+                            println("pubDate: $pubDate")
+                             newlist[i].title=title
+                            newlist[i].link=link
+                            newlist[i].pubDate=pubDate
+                            Log.d("뉴스",newlist[i].title)
+                        }
+                        newsRecyclerView.adapter = NewsAdpater(newlist)
+
+                    } catch (e: JSONException) {
+                        e.printStackTrace()
+                    }
+                } else {
+
+                }
+            }
+
+            override fun onFailure(call: Call<String?>?, t: Throwable) {
+
+            }
+        })
     }
 
 }
