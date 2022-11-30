@@ -7,8 +7,10 @@ import androidx.room.*
 @Dao
 interface WeatherLocationInterface {
     @Query("SELECT * FROM WeatherLocationTable")
-    fun getAll(): List<WeatherLocationTable>
+    fun getAll(): MutableList<WeatherLocationTable>
 
+    @Update
+    fun update(WeatherLocationTable: WeatherLocationTable)
 
     @Insert
     fun insert(WeatherLocationTable: WeatherLocationTable)
@@ -18,6 +20,9 @@ interface WeatherLocationInterface {
 
     @Query("DELETE FROM WeatherLocationTable WHERE id = :id")
     fun de(id:Int)
+
+    @Query("UPDATE  WeatherLocationTable SET addcity = :addcity,wx=:wx,wy=:wy WHERE id = 0")
+    fun up(addcity: String,wx: Int,wy: Int)
     @Delete
     fun delete(WeatherLocationTable:WeatherLocationTable)
 }

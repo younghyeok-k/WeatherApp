@@ -2,29 +2,26 @@ package com.example.test2
 
 
 import android.annotation.SuppressLint
-import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Point
 import android.location.Address
 import android.location.Geocoder
-import android.location.LocationManager
+import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Room
 import com.example.test2.Adapter.LocationAdpater
 import com.example.test2.Adapter.NewsAdpater
 import com.example.test2.Adapter.WeatherAdapter
 import com.example.test2.Common.Common
-import com.example.test2.Dao.WeatherLocationDatabase
 import com.example.test2.Dao.WeatherLocationTable
 import com.example.test2.Model.ModelNews
 import com.example.test2.Model.ModelWeather
@@ -34,6 +31,9 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
 import retrofit2.Call
@@ -82,6 +82,7 @@ class MainActivity : AppCompatActivity() {
 // <새로고침> 버튼 누를 때 날씨 정보 다시 가져오기
         btnRefresh.setOnClickListener {
             requestLocation()
+            getResultSearch()
         }
 
 
@@ -92,21 +93,13 @@ class MainActivity : AppCompatActivity() {
 
         val btnmap = findViewById<Button>(R.id.btnmap)
         btnmap.setOnClickListener {
-
-//            val WeatherLocationDB =
-//                Room.databaseBuilder(
-//                    applicationContext,
-//                    WeatherLocationDatabase::class.java,
-//                    "Weatherlocation"
-//                )
-//                    .allowMainThreadQueries()
-//                    .build()
-//            WeatherLocationDB.WeatherLocationInterface()
-//                .insert(WeatherLocationTable(currentLocation,curPoint!!.x , curPoint!!.y))
             val intent = Intent(this, LocationActivity::class.java)
-//            intent.putExtra("mainx", curPoint!!.x)
-//            intent.putExtra("mainy", curPoint!!.y)
-//            intent.putExtra("mainaddress", currentLocation)
+            if (curPoint != null && currentLocation != "") {
+                intent.putExtra("mainx", curPoint!!.x)
+                intent.putExtra("mainy", curPoint!!.y)
+                intent.putExtra("mainaddress", currentLocation)
+            }
+
             startActivity(intent)
         }
         getResultSearch()
@@ -218,6 +211,129 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+
+    // 내 현재 위치의 위경도를 격자 좌표로 변환하여 해당 위치의 날씨정보 설정하기
+    @SuppressLint("MissingPermission")
+    private fun requestLocation() {
+        val locationClient = LocationServices.getFusedLocationProviderClient(this@MainActivity)
+
+        try {
+            // 나의 현재 위치 요청
+            val locationRequest = LocationRequest.create()
+            locationRequest.run {
+                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                interval = 60 * 1000    // 요청 간격(1초)
+            }
+            val locationCallback = object : LocationCallback() {
+                // 요청 결과
+                override fun onLocationResult(p0: LocationResult) {
+                    p0.let {
+                        for (location in it.locations) {
+
+                            Log.d("위치", (location.latitude).toString())
+                            Log.d("위치", (location.longitude).toString())
+                            var geocoder = Geocoder(applicationContext)
+                            var mResultlist: List<Address>
+
+                            mResultlist = geocoder.getFromLocation(
+                                location.latitude,
+                                location.longitude,
+                                1
+                            )
+                            currentLocation = mResultlist[0].locality
+
+                            val txad = findViewById<TextView>(R.id.address);
+                            txad.text = currentLocation
+                            // 현재 위치의 위경도를 격자 좌표로 변환
+                            curPoint = dfsXyConv(location.latitude, location.longitude)
+                            Log.d("위치2", (curPoint!!.x).toString())
+                            Log.d("위치2", (curPoint!!.y).toString())
+                            // nx, ny지점의 날씨 가져와서 설정하기
+                            setWeather(curPoint!!.x, curPoint!!.y)
+
+                        }
+                    }
+                }
+            }
+
+            // 내 위치 실시간으로 감지
+            Looper.myLooper()?.let {
+                locationClient.requestLocationUpdates(
+                    locationRequest, locationCallback,
+                    it
+                )
+            }
+
+
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+        }
+    }
+
+
+    fun getResultSearch() {
+        val apiInterface: ApiInterface = ApiClient.instance!!.create(ApiInterface::class.java)
+        val call = apiInterface.getSearchResult(clientId, clientSecret, "news", "오늘날씨")
+
+        call!!.enqueue(object : retrofit2.Callback<String?> {
+            override fun onResponse(call: Call<String?>, response: Response<String?>) {
+                if (response.isSuccessful && response.body() != null) {
+                    var title: String
+                    var link: String
+                    var pubDate: String
+                    var jsonObject: JSONObject? = null
+
+                    val newlist = mutableListOf(
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                        ModelNews(),
+                    )
+
+                    try {
+                        jsonObject = JSONObject(response.body())
+                        val jsonArray = jsonObject.getJSONArray("items")
+                        for (i in 0 until jsonArray.length()) {
+                            val item = jsonArray.getJSONObject(i)
+                            link = item.getString("link")
+                            title = item.getString("title").replace("&quot;", " \"\" ")
+                                .replace("&apos;", "").replace("<b>", "").replace("</b>", "")
+                            pubDate = item.getString("pubDate")
+                            newlist[i].title = title
+                            newlist[i].link = link
+                            newlist[i].pubDate = pubDate
+                            Log.d("뉴스", newlist[i].title)
+                            Log.d("뉴스", newlist[i].link)
+                        }
+                        val adpter = NewsAdpater(this,newlist)
+                        adpter.setOnItemClickListener(object : NewsAdpater.OnItemClickListener {
+                            override fun onItemClick(v: View, pos: Int) {
+                                var intent = Intent(Intent.ACTION_VIEW, Uri.parse(newlist[pos].link))
+                                startActivity(intent)
+                            }
+                        })
+                        newsRecyclerView.adapter =adpter
+
+                    } catch (e: JSONException) {
+                        e.printStackTrace()
+                    }
+                } else {
+
+                }
+            }
+
+            override fun onFailure(call: Call<String?>?, t: Throwable) {
+
+            }
+        })
+    }
+
     fun getRainImage(rainType: String, sky: String, factTime: String): Int {
         return when (rainType) {
             "0" -> getWeatherImage(sky, factTime)
@@ -295,65 +411,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    // 내 현재 위치의 위경도를 격자 좌표로 변환하여 해당 위치의 날씨정보 설정하기
-    @SuppressLint("MissingPermission")
-    private fun requestLocation() {
-        val locationClient = LocationServices.getFusedLocationProviderClient(this@MainActivity)
-
-        try {
-            // 나의 현재 위치 요청
-            val locationRequest = LocationRequest.create()
-            locationRequest.run {
-                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-                interval = 60 * 1000    // 요청 간격(30초)
-            }
-            val locationCallback = object : LocationCallback() {
-                // 요청 결과
-                override fun onLocationResult(p0: LocationResult) {
-                    p0.let {
-                        for (location in it.locations) {
-
-                            Log.d("위치", (location.latitude).toString())
-                            Log.d("위치", (location.longitude).toString())
-                            var geocoder = Geocoder(applicationContext)
-                            var mResultlist: List<Address>
-                            var address =
-                                geocoder.getFromLocation(location.latitude, location.longitude, 1)
-
-                            mResultlist = geocoder.getFromLocation(
-                                location.latitude,
-                                location.longitude,
-                                1
-                            )
-                            currentLocation = mResultlist[0].locality
-
-                            val txad = findViewById<TextView>(R.id.address);
-                            txad.text = currentLocation
-                            // 현재 위치의 위경도를 격자 좌표로 변환
-                            curPoint = dfsXyConv(location.latitude, location.longitude)
-                            Log.d("위치2", (curPoint!!.x).toString())
-                            Log.d("위치2", (curPoint!!.y).toString())
-                            // nx, ny지점의 날씨 가져와서 설정하기
-                            setWeather(curPoint!!.x, curPoint!!.y)
-                        }
-                    }
-                }
-            }
-
-            // 내 위치 실시간으로 감지
-            Looper.myLooper()?.let {
-                locationClient.requestLocationUpdates(
-                    locationRequest, locationCallback,
-                    it
-                )
-            }
-
-
-        } catch (e: SecurityException) {
-            e.printStackTrace()
-        }
-    }
-
     // 위경도를 기상청에서 사용하는 격자 좌표로 변환
     fun dfsXyConv(v1: Double, v2: Double): Point {
         val RE = 6371.00877     // 지구 반경(km)
@@ -391,66 +448,5 @@ class MainActivity : AppCompatActivity() {
         return Point(x, y)
     }
 
-    fun getResultSearch() {
-        val apiInterface: ApiInterface = ApiClient.instance!!.create(ApiInterface::class.java)
-        val call = apiInterface.getSearchResult(clientId, clientSecret, "news", "오늘날씨")
-
-        call!!.enqueue(object : retrofit2.Callback<String?> {
-            override fun onResponse(call: Call<String?>, response: Response<String?>) {
-                if (response.isSuccessful && response.body() != null) {
-                    Log.d("naver:api", response.body().toString())
-                    var title: String
-                    var link: String
-                    var pubDate: String
-                    var jsonObject: JSONObject? = null
-
-                    val newlist = mutableListOf(
-                        ModelNews(),
-                        ModelNews(),
-                        ModelNews(),
-                        ModelNews(),
-                        ModelNews(),
-                        ModelNews(),
-                        ModelNews(),
-                        ModelNews(),
-                        ModelNews(),
-                        ModelNews(),
-                    )
-
-                    try {
-                        jsonObject = JSONObject(response.body())
-                        val jsonArray = jsonObject.getJSONArray("items")
-
-                        for (i in 0 until jsonArray.length()) {
-                            val item = jsonArray.getJSONObject(i)
-                            link = item.getString("link")
-                            title = item.getString("title").replace("&quot;", " \"\" ")
-                                .replace("&apos;", "").replace("<b>", "").replace("</b>", "")
-
-                            pubDate = item.getString("pubDate")
-                            println("TITLE : $title")
-
-                            println("link: $link")
-                            println("pubDate: $pubDate")
-                             newlist[i].title=title
-                            newlist[i].link=link
-                            newlist[i].pubDate=pubDate
-                            Log.d("뉴스",newlist[i].title)
-                        }
-                        newsRecyclerView.adapter = NewsAdpater(newlist)
-
-                    } catch (e: JSONException) {
-                        e.printStackTrace()
-                    }
-                } else {
-
-                }
-            }
-
-            override fun onFailure(call: Call<String?>?, t: Throwable) {
-
-            }
-        })
-    }
 
 }

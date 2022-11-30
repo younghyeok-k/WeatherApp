@@ -11,12 +11,25 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.room.Room
+import com.example.test2.Dao.WeatherLocationDatabase
+import com.example.test2.Dao.WeatherLocationTable
 import com.example.test2.Model.ModelLocation
 import com.example.test2.Touch.ItemTouchHelperListener
 
 
 class LocationAdpater(private val context: Context, var items: MutableList<ModelLocation>) :
     RecyclerView.Adapter<LocationAdpater.ViewHolder>(), ItemTouchHelperListener {
+    val WeatherLocationDB = Room.databaseBuilder(
+        context,
+        WeatherLocationDatabase::class.java,
+        "Weatherlocation"
+    )
+        .allowMainThreadQueries()
+        .build()
+    lateinit var DBlist: MutableList<WeatherLocationTable>
+
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LocationAdpater.ViewHolder {
         val itemView =
             LayoutInflater.from(parent.context).inflate(R.layout.list_item_location, parent, false)
@@ -30,10 +43,19 @@ class LocationAdpater(private val context: Context, var items: MutableList<Model
     }
     interface OnItemClickListener{
         fun onItemClick(v:View, pos : Int)
+
     }
     private var listener : OnItemClickListener? = null
     fun setOnItemClickListener(listener : OnItemClickListener) {
         this.listener = listener
+    }
+    override fun onRightClick(position: Int, viewHolder: RecyclerView.ViewHolder?) {
+        DBlist = WeatherLocationDB.WeatherLocationInterface().getAll()
+        if(position>=1){
+       items.removeAt(position)
+            WeatherLocationDB.WeatherLocationInterface().delete(DBlist[position-1])
+            notifyItemRemoved(position)
+        }
     }
     // 아이템 갯수 리턴
     override fun getItemCount() = items.count()
@@ -94,12 +116,6 @@ class LocationAdpater(private val context: Context, var items: MutableList<Model
     override fun onItemSwipe(position: Int) {
         TODO("Not yet implemented")
     }
-
-    override fun onRightClick(position: Int, viewHolder: RecyclerView.ViewHolder?) {
-        Toast.makeText(context, "RightClick", Toast.LENGTH_SHORT).show()
-    }
-
-
 
 
     override fun onItemMove(from_position: Int, to_position: Int): Boolean = false

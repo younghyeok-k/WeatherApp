@@ -6,15 +6,17 @@ import androidx.recyclerview.widget.RecyclerView
 
 import com.example.test2.R
 import android.annotation.SuppressLint
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import com.example.test2.Model.ModelNews
+import retrofit2.Callback
 
 
-class NewsAdpater (var items : List<ModelNews>) : RecyclerView.Adapter<NewsAdpater.ViewHolder>() {
+class NewsAdpater(private val context: Callback<String?>, var items: List<ModelNews>) : RecyclerView.Adapter<NewsAdpater.ViewHolder>() {
     // 뷰 홀더 만들어서 반환, 뷰릐 레이아웃은 list_item_weather.xml
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NewsAdpater.ViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(R.layout.news_itme, parent, false)
@@ -26,7 +28,14 @@ class NewsAdpater (var items : List<ModelNews>) : RecyclerView.Adapter<NewsAdpat
         val item = items[position]
         holder.setItem(item)
     }
+    interface OnItemClickListener{
+        fun onItemClick(v:View, pos : Int)
 
+    }
+    private var listener : OnItemClickListener? = null
+    fun setOnItemClickListener(listener : OnItemClickListener) {
+        this.listener = listener
+    }
 
     // 아이템 갯수 리턴
     override fun getItemCount() = items.count()
@@ -42,7 +51,13 @@ class NewsAdpater (var items : List<ModelNews>) : RecyclerView.Adapter<NewsAdpat
             link.text=item.link
             title.text=item.title
             pubDate.text=item.pubDate
-
+            val pos = adapterPosition
+            if(pos!= RecyclerView.NO_POSITION)
+            {
+                itemView.setOnClickListener {
+                    listener?.onItemClick(itemView,pos)
+                }
+            }
         }
     }
 

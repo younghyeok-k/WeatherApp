@@ -37,7 +37,6 @@ class LocationActivity : AppCompatActivity() {
     private var base_time = "1200"
     lateinit var locationRecyclerView: RecyclerView
     private var base_date = "20221101"
-    lateinit var lowAdapter: LocationAdpater
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_location)
@@ -111,91 +110,55 @@ class LocationActivity : AppCompatActivity() {
 
             startActivity(intent)
         }
-        var loarray: List<WeatherLocationTable>
+        var DBlist: MutableList<WeatherLocationTable>
 
-        loarray = WeatherLocationDB.WeatherLocationInterface().getAll()
+        DBlist = WeatherLocationDB.WeatherLocationInterface().getAll()
 //            setWeather(WeatherLocationDB.WeatherLocationInterface().getAll())
-        Log.d("개수", loarray.size.toString())
-        val loArr = mutableListOf(
-            ModelLocation(),
-            ModelLocation(),
-            ModelLocation(),
-            ModelLocation(),
-            ModelLocation(),
+        Log.d("개수", DBlist.size.toString())
+       var mainx = intent.getIntExtra("mainx", 81)
+        var mainY= intent.getIntExtra("mainy", 75)
+        var mainadd= intent.getStringExtra("mainaddress").toString()
 
-            )  //개수 지정해서 해야함
-//       var loArr: MutableList< ModelLocation> = mutableListOf()
-        for (i in 0..4) {
-            setWeather(i, loarray[i].addcity, loarray[i].wx, loarray[i].wy, loArr)
-            Log.d("setWether", loarray[i].id.toString())
+       var loAdapArr: MutableList< ModelLocation> = mutableListOf()
+
+        Locationadd(mainadd,mainx,mainY,loAdapArr)//0
+        if(DBlist.size>=1) {
+            for (i in 0..DBlist.size - 1) {
+                Locationadd(DBlist[i].addcity, DBlist[i].wx, DBlist[i].wy, loAdapArr)
+                Log.d("setWether", DBlist[i].id.toString())
+            }
         }
+        //진주시가 제일위에가도록ㅎ ㅐ야함
 
-        Log.d("wetherARR", loArr[0].address)
-        Log.d("wetherARR", loArr[1].address)
-        Log.d("wetherARR", loArr[2].address)
-        val adpter = LocationAdpater(this,loArr)
+        val adpter = LocationAdpater(this,loAdapArr)
         val itemTouchHelper = ItemTouchHelper(SwipeController(adpter))
         adpter.setOnItemClickListener(object : LocationAdpater.OnItemClickListener {
             override fun onItemClick(v: View, pos: Int) {
-                WeatherLocationDB.WeatherLocationInterface().delete(loarray[pos])
-                loArr.removeAt(pos)
+                if(DBlist.size>=1) {
+//                WeatherLocationDB.WeatherLocationInterface().delete(DBlist[pos-1])
+                }
                 locationRecyclerView.adapter?.notifyDataSetChanged()
                 adpter.notifyDataSetChanged()
             }
 
+
         })
 
         itemTouchHelper.attachToRecyclerView(locationRecyclerView)
-        adpter.notifyDataSetChanged()
         locationRecyclerView.adapter = adpter
-
-
+        locationRecyclerView.adapter?.notifyDataSetChanged()
+        adpter.notifyDataSetChanged()
+        loAdapArr.clear()
     }
 
-    // 위경도를 기상청에서 사용하는 격자 좌표로 변환
-    fun dfsXyConv(v1: Double, v2: Double): Point {
-        val RE = 6371.00877     // 지구 반경(km)
-        val GRID = 5.0          // 격자 간격(km)
-        val SLAT1 = 30.0        // 투영 위도1(degree)
-        val SLAT2 = 60.0        // 투영 위도2(degree)
-        val OLON = 126.0        // 기준점 경도(degree)
-        val OLAT = 38.0         // 기준점 위도(degree)
-        val XO = 43             // 기준점 X좌표(GRID)
-        val YO = 136       // 기준점 Y좌표(GRID)
-        val DEGRAD = Math.PI / 180.0
-        val re = RE / GRID
-        val slat1 = SLAT1 * DEGRAD
-        val slat2 = SLAT2 * DEGRAD
-        val olon = OLON * DEGRAD
-        val olat = OLAT * DEGRAD
-
-        var sn = Math.tan(Math.PI * 0.25 + slat2 * 0.5) / Math.tan(Math.PI * 0.25 + slat1 * 0.5)
-        sn = Math.log(Math.cos(slat1) / Math.cos(slat2)) / Math.log(sn)
-        var sf = Math.tan(Math.PI * 0.25 + slat1 * 0.5)
-        sf = Math.pow(sf, sn) * Math.cos(slat1) / sn
-        var ro = Math.tan(Math.PI * 0.25 + olat * 0.5)
-        ro = re * sf / Math.pow(ro, sn)
-
-        var ra = Math.tan(Math.PI * 0.25 + (v1) * DEGRAD * 0.5)
-        ra = re * sf / Math.pow(ra, sn)
-        var theta = v2 * DEGRAD - olon
-        if (theta > Math.PI) theta -= 2.0 * Math.PI
-        if (theta < -Math.PI) theta += 2.0 * Math.PI
-        theta *= sn
-
-        val x = (ra * Math.sin(theta) + XO + 0.5).toInt()
-        val y = (ro - ra * Math.cos(theta) + YO + 0.5).toInt()
-
-        return Point(x, y)
-    }
 
     // 날씨 가져와서 설정하기
-    private fun setWeather(
-        id: Int,
+    private fun Locationadd(
+
         loaddress: String,
         nx: Int,
         ny: Int,
-        loarr: MutableList<ModelLocation>
+        loAdapArr: MutableList<ModelLocation>
     ) {
         val cal = Calendar.getInstance()
         base_date = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(cal.time) // 현재 날짜
@@ -235,16 +198,9 @@ class LocationActivity : AppCompatActivity() {
                             else -> continue
                         }
                         index++
-//                        Log.d("loarr${i}",  weatherArr[index].temp)
                     }
                     for (i in 0..5) weatherArr[i].fcstTime = it[i].fcstTime
-
-                    loarr.set(id, weatherArr[0])
-                    Log.d("setWether:rainType237", weatherArr[0].rainType)
-                    Log.d("setWethe238r", weatherArr[0].address)
-                    Log.d("loarr", loarr[id].address)
-                    Log.d("loarr", loarr[id].rainType)
-
+                    loAdapArr.add( weatherArr[0])
                     locationRecyclerView.adapter?.notifyDataSetChanged()
                 }
             }
@@ -257,5 +213,42 @@ class LocationActivity : AppCompatActivity() {
 
         )
     }
+    // 위경도를 기상청에서 사용하는 격자 좌표로 변환
+    fun dfsXyConv(v1: Double, v2: Double): Point {
+        val RE = 6371.00877     // 지구 반경(km)
+        val GRID = 5.0          // 격자 간격(km)
+        val SLAT1 = 30.0        // 투영 위도1(degree)
+        val SLAT2 = 60.0        // 투영 위도2(degree)
+        val OLON = 126.0        // 기준점 경도(degree)
+        val OLAT = 38.0         // 기준점 위도(degree)
+        val XO = 43             // 기준점 X좌표(GRID)
+        val YO = 136       // 기준점 Y좌표(GRID)
+        val DEGRAD = Math.PI / 180.0
+        val re = RE / GRID
+        val slat1 = SLAT1 * DEGRAD
+        val slat2 = SLAT2 * DEGRAD
+        val olon = OLON * DEGRAD
+        val olat = OLAT * DEGRAD
+
+        var sn = Math.tan(Math.PI * 0.25 + slat2 * 0.5) / Math.tan(Math.PI * 0.25 + slat1 * 0.5)
+        sn = Math.log(Math.cos(slat1) / Math.cos(slat2)) / Math.log(sn)
+        var sf = Math.tan(Math.PI * 0.25 + slat1 * 0.5)
+        sf = Math.pow(sf, sn) * Math.cos(slat1) / sn
+        var ro = Math.tan(Math.PI * 0.25 + olat * 0.5)
+        ro = re * sf / Math.pow(ro, sn)
+
+        var ra = Math.tan(Math.PI * 0.25 + (v1) * DEGRAD * 0.5)
+        ra = re * sf / Math.pow(ra, sn)
+        var theta = v2 * DEGRAD - olon
+        if (theta > Math.PI) theta -= 2.0 * Math.PI
+        if (theta < -Math.PI) theta += 2.0 * Math.PI
+        theta *= sn
+
+        val x = (ra * Math.sin(theta) + XO + 0.5).toInt()
+        val y = (ro - ra * Math.cos(theta) + YO + 0.5).toInt()
+
+        return Point(x, y)
+    }
+
 
 }
