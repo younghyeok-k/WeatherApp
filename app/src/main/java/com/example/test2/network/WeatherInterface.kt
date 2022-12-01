@@ -36,7 +36,6 @@ data class BODY(val dataType : String, val items : ITEMS, val totalCount : Int)
 data class ITEMS(val item : List<ITEM>)
 // category : 자료 구분 코드, fcstDate : 예측 날짜, fcstTime : 예측 시간, fcstValue : 예보 값
 data class ITEM(val category : String, val fcstDate : String, val fcstTime : String, val fcstValue : String)
-
 // retrofit을 사용하기 위한 빌더 생성
 
 val gson : Gson = GsonBuilder()
@@ -52,4 +51,3 @@ object ApiObject {
         retrofit.create(WeatherInterface::class.java)
     }
 }
-

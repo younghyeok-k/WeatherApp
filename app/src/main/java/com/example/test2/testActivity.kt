@@ -21,6 +21,9 @@ import com.example.test2.Model.ModelWeather
 import com.example.test2.network.ApiObject
 import com.example.test2.network.ITEM
 import com.example.test2.network.WEATHER
+//import com.example.test2.network.ApiObject
+//import com.example.test2.network.ITEM
+//import com.example.test2.network.WEATHER
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -89,6 +92,8 @@ class testActivity : AppCompatActivity() {
 
         val btnc = findViewById<Button>(R.id.btncancel)
         btnc.setOnClickListener {
+            WeatherLocationDB.WeatherLocationInterface().deleteAll()
+            onBackPressed()
             var intent = Intent(this, LocationActivity::class.java)
             startActivity(intent)
         }
