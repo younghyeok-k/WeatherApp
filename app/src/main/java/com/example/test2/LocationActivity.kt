@@ -132,17 +132,18 @@ class LocationActivity : AppCompatActivity() {
                 Log.d("setWether", DBlist[i].id.toString())
             }
         }
-        //진주시가 제일위에가도록ㅎ ㅐ야함
+
 
         val adpter = LocationAdpater(this, loAdapArr)
         val itemTouchHelper = ItemTouchHelper(SwipeController(adpter))
         adpter.setOnItemClickListener(object : LocationAdpater.OnItemClickListener {
             override fun onItemClick(v: View, pos: Int) {
-                if (DBlist.size >= 1) {
-//                WeatherLocationDB.WeatherLocationInterface().delete(DBlist[pos-1])
+                if(pos==0)bottomdialog(mainx,mainY,mainadd)
+                if (pos >= 1) {
+                    bottomdialog(DBlist[pos-1].wx,DBlist[pos-1].wy,DBlist[pos-1].addcity)
                 }
-//                dialog(DBlist[pos-1].wx,DBlist[pos-1].wy)
-                dialog(81,75)
+
+
                 locationRecyclerView.adapter?.notifyDataSetChanged()
                 adpter.notifyDataSetChanged()
             }
@@ -160,7 +161,7 @@ class LocationActivity : AppCompatActivity() {
 
 
     // 날씨 가져와서 설정하기
-    private fun dialog(nx: Int, ny: Int) {
+    private fun bottomdialog(nx: Int, ny: Int,add:String) {
         val cal = Calendar.getInstance()
         base_date = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(cal.time) // 현재 날짜
         val timeH = SimpleDateFormat("HH", Locale.getDefault()).format(cal.time)
@@ -201,7 +202,7 @@ class LocationActivity : AppCompatActivity() {
                     }
                     for (i in 0..5) weatherArr[i].fcstTime = it[i].fcstTime
                     val dialogadapter = wad(weatherArr)
-                    val bottomDialogFragment = BottomDialogFragment(dialogadapter)
+                    val bottomDialogFragment = BottomDialogFragment(dialogadapter,add)
                     bottomDialogFragment.show(supportFragmentManager,"TAG")
 
                 }
@@ -214,13 +215,7 @@ class LocationActivity : AppCompatActivity() {
         })
     }
     // 날씨 가져와서 설정하기
-    private fun Locationadd(
-
-        loaddress: String,
-        nx: Int,
-        ny: Int,
-        loAdapArr: MutableList<ModelLocation>
-    ) {
+    private fun Locationadd(loaddress: String, nx: Int, ny: Int, loAdapArr: MutableList<ModelLocation>) {
         val cal = Calendar.getInstance()
         base_date = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(cal.time) // 현재 날짜
         val timeH = SimpleDateFormat("HH", Locale.getDefault()).format(cal.time)
@@ -274,7 +269,6 @@ class LocationActivity : AppCompatActivity() {
 
         )
     }
-
     // 위경도를 기상청에서 사용하는 격자 좌표로 변환
     fun dfsXyConv(v1: Double, v2: Double): Point {
         val RE = 6371.00877     // 지구 반경(km)
