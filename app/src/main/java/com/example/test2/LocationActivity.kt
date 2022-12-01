@@ -14,10 +14,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.example.test2.Adapter.LocationAdpater
+import com.example.test2.Adapter.WeatherAdapter
+import com.example.test2.Adapter.wad
 import com.example.test2.Common.Common
 import com.example.test2.Dao.*
 
 import com.example.test2.Model.ModelLocation
+import com.example.test2.Model.ModelWeather
+import com.example.test2.Touch.BottomDialogFragment
 import com.example.test2.Touch.SwipeController
 import com.example.test2.network.ApiObject
 import com.example.test2.network.ITEM
@@ -115,14 +119,14 @@ class LocationActivity : AppCompatActivity() {
         DBlist = WeatherLocationDB.WeatherLocationInterface().getAll()
 //            setWeather(WeatherLocationDB.WeatherLocationInterface().getAll())
         Log.d("개수", DBlist.size.toString())
-       var mainx = intent.getIntExtra("mainx", 81)
-        var mainY= intent.getIntExtra("mainy", 75)
-        var mainadd= intent.getStringExtra("mainaddress").toString()
+        var mainx = intent.getIntExtra("mainx", 81)
+        var mainY = intent.getIntExtra("mainy", 75)
+        var mainadd = intent.getStringExtra("mainaddress").toString()
 
-       var loAdapArr: MutableList< ModelLocation> = mutableListOf()
+        var loAdapArr: MutableList<ModelLocation> = mutableListOf()
 
-        Locationadd(mainadd,mainx,mainY,loAdapArr)//0
-        if(DBlist.size>=1) {
+        Locationadd(mainadd, mainx, mainY, loAdapArr)//0
+        if (DBlist.size >= 1) {
             for (i in 0..DBlist.size - 1) {
                 Locationadd(DBlist[i].addcity, DBlist[i].wx, DBlist[i].wy, loAdapArr)
                 Log.d("setWether", DBlist[i].id.toString())
@@ -130,13 +134,15 @@ class LocationActivity : AppCompatActivity() {
         }
         //진주시가 제일위에가도록ㅎ ㅐ야함
 
-        val adpter = LocationAdpater(this,loAdapArr)
+        val adpter = LocationAdpater(this, loAdapArr)
         val itemTouchHelper = ItemTouchHelper(SwipeController(adpter))
         adpter.setOnItemClickListener(object : LocationAdpater.OnItemClickListener {
             override fun onItemClick(v: View, pos: Int) {
-                if(DBlist.size>=1) {
+                if (DBlist.size >= 1) {
 //                WeatherLocationDB.WeatherLocationInterface().delete(DBlist[pos-1])
                 }
+//                dialog(DBlist[pos-1].wx,DBlist[pos-1].wy)
+                dialog(81,75)
                 locationRecyclerView.adapter?.notifyDataSetChanged()
                 adpter.notifyDataSetChanged()
             }
@@ -152,6 +158,61 @@ class LocationActivity : AppCompatActivity() {
     }
 
 
+
+    // 날씨 가져와서 설정하기
+    private fun dialog(nx: Int, ny: Int) {
+        val cal = Calendar.getInstance()
+        base_date = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(cal.time) // 현재 날짜
+        val timeH = SimpleDateFormat("HH", Locale.getDefault()).format(cal.time)
+        val timeM = SimpleDateFormat("MM", Locale.getDefault()).format(cal.time)
+
+        base_time = Common().getBaseTime(timeH, timeM)
+        if (timeH == "00" && base_time == "2330") {
+            cal.add(Calendar.DATE, -1).toString()
+            base_date = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(cal.time)
+        }
+        val call =
+            ApiObject.retrofitService.GetWeather(60, 1, "JSON", base_date, base_time, nx, ny)
+
+        call.enqueue(object : retrofit2.Callback<WEATHER> {
+            override fun onResponse(call: Call<WEATHER>, response: Response<WEATHER>) {
+                if (response.isSuccessful) {
+                    val it: List<ITEM> = response.body()!!.response.body.items.item
+                    var  weatherArr = arrayOf(
+                        ModelWeather(),
+                        ModelWeather(),
+                        ModelWeather(),
+                        ModelWeather(),
+                        ModelWeather(),
+                        ModelWeather(),
+                    )
+                    var index = 0
+                    val totalCount = response.body()!!.response.body.totalCount - 1
+                    for (i in 0..totalCount) {
+                        index %= 6
+                        when (it[i].category) {
+                            "PTY" -> weatherArr[index].rainType = it[i].fcstValue // 강수 형태
+                            "REH" -> weatherArr[index].humidity = it[i].fcstValue // 습도
+                            "SKY" -> weatherArr[index].sky = it[i].fcstValue // 하늘 상태
+                            "T1H" -> weatherArr[index].temp = it[i].fcstValue // 기온
+                            else -> continue
+                        }
+                        index++
+                    }
+                    for (i in 0..5) weatherArr[i].fcstTime = it[i].fcstTime
+                    val dialogadapter = wad(weatherArr)
+                    val bottomDialogFragment = BottomDialogFragment(dialogadapter)
+                    bottomDialogFragment.show(supportFragmentManager,"TAG")
+
+                }
+            }
+
+
+            override fun onFailure(call: Call<WEATHER>, t: Throwable) {
+
+            }
+        })
+    }
     // 날씨 가져와서 설정하기
     private fun Locationadd(
 
@@ -183,7 +244,7 @@ class LocationActivity : AppCompatActivity() {
                         ModelLocation(),
                         ModelLocation(),
                         ModelLocation(),
-                        )
+                    )
                     var index = 0
                     val totalCount = response.body()!!.response.body.totalCount - 1
                     weatherArr[0].address = loaddress
@@ -200,7 +261,7 @@ class LocationActivity : AppCompatActivity() {
                         index++
                     }
                     for (i in 0..5) weatherArr[i].fcstTime = it[i].fcstTime
-                    loAdapArr.add( weatherArr[0])
+                    loAdapArr.add(weatherArr[0])
                     locationRecyclerView.adapter?.notifyDataSetChanged()
                 }
             }
@@ -213,6 +274,7 @@ class LocationActivity : AppCompatActivity() {
 
         )
     }
+
     // 위경도를 기상청에서 사용하는 격자 좌표로 변환
     fun dfsXyConv(v1: Double, v2: Double): Point {
         val RE = 6371.00877     // 지구 반경(km)
