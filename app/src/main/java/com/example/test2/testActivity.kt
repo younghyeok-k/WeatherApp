@@ -92,7 +92,7 @@ class testActivity : AppCompatActivity() {
 
         val btnc = findViewById<Button>(R.id.btncancel)
         btnc.setOnClickListener {
-            WeatherLocationDB.WeatherLocationInterface().deleteAll()
+//            WeatherLocationDB.WeatherLocationInterface().deleteAll()
             onBackPressed()
             var intent = Intent(this, LocationActivity::class.java)
             startActivity(intent)

@@ -78,12 +78,23 @@ class LocationActivity : AppCompatActivity() {
             Log.d("db_test", "$output")
         }
         val word: MutableList<String> = ArrayList()
-        val name1 = NationalWeatherDB.nationalWeatherInterface().getName1().distinct()
-        val name2 = (NationalWeatherDB.nationalWeatherInterface().getName2().distinct())
-        val name3 = (NationalWeatherDB.nationalWeatherInterface().getName3().distinct())
-        word.addAll(name1)
-        word.addAll(name2)
-        word.addAll(name3)
+        val name1 = NationalWeatherDB.nationalWeatherInterface().getName1()
+        val name2 = (NationalWeatherDB.nationalWeatherInterface().getName2())
+        val name3 = (NationalWeatherDB.nationalWeatherInterface().getName3())
+
+        for (i in 0..name1.size - 1) {
+            if(name2[i]!=""&&name3[i]!=""){
+                word.add(name1[i] + " " + name2[i] + " " + name3[i])
+            }else if(name2[i]!=""&&name3[i]==""){
+                word.add(name1[i] + " " + name2[i])
+            }else if(name2[i]==""&&name3[i]==""){
+                word.add(name1[i])
+            }
+        }
+        word.distinct()
+//        word.addAll(name1)
+//        word.addAll(name2)
+//        word.addAll(name3)
         Log.d("db_test", "$word")
 
         ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, word).also { adapter ->
@@ -110,7 +121,14 @@ class LocationActivity : AppCompatActivity() {
             val intent = Intent(this, testActivity::class.java)
             intent.putExtra("nx", curPoint!!.x)
             intent.putExtra("ny", curPoint!!.y)
-            intent.putExtra("address", mResultlist[0].locality)
+
+            //  mResultlist[0].adminArea //행정구역 서울 특별시
+            //   mResultlist[0].locality //관할 구역 예 중구 달서구
+            //  mResultlist[0].thoroughfare //상세구역 봉래동 2가
+
+                intent.putExtra("address",mResultlist[0].getAddressLine(0).replace(mResultlist[0].countryName,"") )
+
+            Log.d("주소", mResultlist[0].getAddressLine(0).replace(mResultlist[0].countryName,""))
 
             startActivity(intent)
         }
@@ -138,9 +156,9 @@ class LocationActivity : AppCompatActivity() {
         val itemTouchHelper = ItemTouchHelper(SwipeController(adpter))
         adpter.setOnItemClickListener(object : LocationAdpater.OnItemClickListener {
             override fun onItemClick(v: View, pos: Int) {
-                if(pos==0)bottomdialog(mainx,mainY,mainadd)
+                if (pos == 0) bottomdialog(mainx, mainY, mainadd)
                 if (pos >= 1) {
-                    bottomdialog(DBlist[pos-1].wx,DBlist[pos-1].wy,DBlist[pos-1].addcity)
+                    bottomdialog(DBlist[pos - 1].wx, DBlist[pos - 1].wy, DBlist[pos - 1].addcity)
                 }
 
 
@@ -159,9 +177,8 @@ class LocationActivity : AppCompatActivity() {
     }
 
 
-
     // 날씨 가져와서 설정하기
-    private fun bottomdialog(nx: Int, ny: Int,add:String) {
+    private fun bottomdialog(nx: Int, ny: Int, add: String) {
         val cal = Calendar.getInstance()
         base_date = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(cal.time) // 현재 날짜
         val timeH = SimpleDateFormat("HH", Locale.getDefault()).format(cal.time)
@@ -179,7 +196,7 @@ class LocationActivity : AppCompatActivity() {
             override fun onResponse(call: Call<WEATHER>, response: Response<WEATHER>) {
                 if (response.isSuccessful) {
                     val it: List<ITEM> = response.body()!!.response.body.items.item
-                    var  weatherArr = arrayOf(
+                    var weatherArr = arrayOf(
                         ModelWeather(),
                         ModelWeather(),
                         ModelWeather(),
@@ -202,8 +219,8 @@ class LocationActivity : AppCompatActivity() {
                     }
                     for (i in 0..5) weatherArr[i].fcstTime = it[i].fcstTime
                     val dialogadapter = wad(weatherArr)
-                    val bottomDialogFragment = BottomDialogFragment(dialogadapter,add)
-                    bottomDialogFragment.show(supportFragmentManager,"TAG")
+                    val bottomDialogFragment = BottomDialogFragment(dialogadapter, add)
+                    bottomDialogFragment.show(supportFragmentManager, "TAG")
 
                 }
             }
@@ -214,8 +231,14 @@ class LocationActivity : AppCompatActivity() {
             }
         })
     }
+
     // 날씨 가져와서 설정하기
-    private fun Locationadd(loaddress: String, nx: Int, ny: Int, loAdapArr: MutableList<ModelLocation>) {
+    private fun Locationadd(
+        loaddress: String,
+        nx: Int,
+        ny: Int,
+        loAdapArr: MutableList<ModelLocation>
+    ) {
         val cal = Calendar.getInstance()
         base_date = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(cal.time) // 현재 날짜
         val timeH = SimpleDateFormat("HH", Locale.getDefault()).format(cal.time)
@@ -256,7 +279,9 @@ class LocationActivity : AppCompatActivity() {
                         index++
                     }
                     for (i in 0..5) weatherArr[i].fcstTime = it[i].fcstTime
-                    loAdapArr.add(weatherArr[0])
+                    CoroutineScope(Dispatchers.IO).launch {
+                        loAdapArr.add(weatherArr[0])
+                    }
                     locationRecyclerView.adapter?.notifyDataSetChanged()
                 }
             }
@@ -269,6 +294,7 @@ class LocationActivity : AppCompatActivity() {
 
         )
     }
+
     // 위경도를 기상청에서 사용하는 격자 좌표로 변환
     fun dfsXyConv(v1: Double, v2: Double): Point {
         val RE = 6371.00877     // 지구 반경(km)
