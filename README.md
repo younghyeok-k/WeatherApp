@@ -12,20 +12,23 @@ REST 기반의 웹 서비스를 통해 JSON 구조를 Object형식으로 안드�
 비동기 형태로  받아 화면에 보여주는 방법입니다   
 
 
+
+
+## 주요기능 
+
+![image](https://user-images.githubusercontent.com/97229292/210165423-a7ac41d5-d189-493e-920c-da814442f3ce.png)
+![image](https://user-images.githubusercontent.com/97229292/210165427-fd3b1136-6e67-407a-984a-b6212dcb92db.png)
+![image](https://user-images.githubusercontent.com/97229292/210165430-1685c756-bdcc-4211-b77c-2cf38fe5c59d.png)
+![image](https://user-images.githubusercontent.com/97229292/210165433-536522a7-922f-4479-b882-8f98666ebecc.png)
+
 ## 개발 라이브러리 및 도구 
 
 ![image](https://user-images.githubusercontent.com/97229292/207284626-64c759b7-0898-4662-aec7-b6054c0a6cf6.png)
 ![image](https://user-images.githubusercontent.com/97229292/207284647-2fa23386-2909-46b7-a1aa-6eeec34d884d.png)
 
-Retrofit2          OkHttp3
-RESTful API      GeoCoding
-Room  
-
-기상청 단기 예보 API
-Naver 검색 API
-
-## 
-![image](https://user-images.githubusercontent.com/97229292/210165423-a7ac41d5-d189-493e-920c-da814442f3ce.png)
-![image](https://user-images.githubusercontent.com/97229292/210165427-fd3b1136-6e67-407a-984a-b6212dcb92db.png)
-![image](https://user-images.githubusercontent.com/97229292/210165430-1685c756-bdcc-4211-b77c-2cf38fe5c59d.png)
-![image](https://user-images.githubusercontent.com/97229292/210165433-536522a7-922f-4479-b882-8f98666ebecc.png)
+Retrofit2          OkHttp3   
+RESTful API      GeoCoding   
+Room     
+   
+기상청 단기 예보 API   
+Naver 검색 API   
