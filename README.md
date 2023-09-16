@@ -16,10 +16,8 @@ REST 기반의 웹 서비스를 통해 JSON 구조를 Object형식으로 안드�
 
 ## 주요기능 
 
-![image](https://user-images.githubusercontent.com/97229292/210165423-a7ac41d5-d189-493e-920c-da814442f3ce.png)![image](https://user-images.githubusercontent.com/97229292/210165427-fd3b1136-6e67-407a-984a-b6212dcb92db.png)
+![image](https://github.com/younghyeok-k/WeatherApp/assets/97229292/89e165ad-77ad-4c26-96c2-7806adbcdbf2)
 
-![image](https://user-images.githubusercontent.com/97229292/210165430-1685c756-bdcc-4211-b77c-2cf38fe5c59d.png)
-![image](https://user-images.githubusercontent.com/97229292/210165433-536522a7-922f-4479-b882-8f98666ebecc.png)
 
 ## 개발 라이브러리 및 도구 
 
